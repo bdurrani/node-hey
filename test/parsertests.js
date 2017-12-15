@@ -19,28 +19,28 @@ describe('Parser', function() {
         // runs after each test in this block
     });
 
-    it('parser should parse list', function(done) {
-        let input = ['list'];
-        let parser = new Parser(input);
-        parser.registerAction({
-            list: function(token, parser) {
-                // console.log(`register action ${token}`);
-                assert.equal(token, 'list', 'expected token should be list');
-                done();
-            }
-        });
-        parser.parse();
-    });
-
-    // it('parser should parse tags', function(done) {
-    //     let input = ['tag one two'];
+    // it('parser should parse list', function(done) {
+    //     let input = ['list'];
     //     let parser = new Parser(input);
     //     parser.registerAction({
     //         list: function(token, parser) {
-    //             // assert.equal(token, 'list', 'expected token should be list');
+    //             // console.log(`register action ${token}`);
+    //             assert.equal(token, 'list', 'expected token should be list');
     //             done();
     //         }
     //     });
     //     parser.parse();
     // });
+
+    it('parser should parse tags', function(done) {
+        let input = ['tag', '2', 'one', 'two'];
+        let parser = new Parser(input);
+        parser.registerAction({
+            tag: function(token, parser) {
+                // assert.equal(token, 'list', 'expected token should be list');
+                done();
+            }
+        });
+        parser.parse();
+    });
 });

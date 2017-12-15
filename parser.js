@@ -35,14 +35,6 @@ class Parser {
         return 'tag';
     }
 
-    // _reservedTokens() {
-    //     let tokens = [
-    //         this.tagToken,
-    //         this.listToken
-    //     ]; 
-    //     return tokens;
-    // }
-
     _isReservedToken(token) {
         let reservedTokens = [
             this.tagToken,
@@ -58,13 +50,15 @@ class Parser {
         }
         else if (token === this.tagToken) {
             console.log('found tag token');
+            return this.tagCommandState;
         }
     }
 
     _raiseRegisteredAction(token) {
         if (this._actions[token]) {
-            this._actions[token](token, this);
+            this._actions[token](token, this._actionValues);
         }
+        this._actionValues = [];
     }
 
     parse() {
@@ -82,10 +76,6 @@ class Parser {
             this._currentState = this._getCommandFromToken(this._currentValue);
         }
 
-        // if (!this._getNextValue()) {
-        //     this._currentState = this.endCommandState;
-        // }
-
         while (this._currentState !== this.endCommandState) {
             // if (!this._getNextValue()) {
             //     this._currentState = this.endCommandState;
@@ -96,6 +86,8 @@ class Parser {
             // }
             this._currentState();
         }
+
+        // the final state
         this._currentState();
     }
 
@@ -114,14 +106,40 @@ class Parser {
         console.log('tag token');
         const token = this.tagToken;
         this._actionValues[token] = [];
-        if (!this._getNextValue()) {
+        if (this._getNextValue()) {
+            this._currentState = this.tagEventIdCommandState;
+        }
+        else {
+            this._currentState = this.endCommandState;
+        }
+    }
+
+    tagEventIdCommandState() {
+        const token = this.tagToken;
+        this._actionValues[token].push({
+            eventid: this._currentValue
+        });
+        if (this._getNextValue()) {
             this._currentState = this.tagValueCommandState;
+        }
+        else {
+            this._raiseRegisteredAction(token);
+            this._currentState = this.endCommandState;
         }
     }
 
     tagValueCommandState() {
         const token = this.tagToken;
-        // this._actionValues[token].push()
+        this._actionValues[token].push({
+            tagValue: this._currentValue
+        });
+        if (this._getNextValue()) {
+            this._currentState = this.tagValueCommandState;
+        }
+        else {
+            this._raiseRegisteredAction(token);
+            this._currentState = this.endCommandState;
+        }
     }
 
     _getNextValue() {
@@ -132,13 +150,6 @@ class Parser {
         }
         return false;
     }
-
-    // processListToken() {
-    //     const token = this.listToken;
-    //     if (this._actions[this.listToken]) {
-    //         this._actions[this.listToken](token, this);
-    //     }
-    // }
 
     // https://github.com/arieh/CommandParser/blob/b84fe9ab8b7d0e539d7a2d12e74dd93383775a47/lib/Parser.js
     //  this.registerActions({
