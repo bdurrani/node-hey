@@ -49,7 +49,6 @@ class Parser {
             return this.listCommandState;
         }
         else if (token === this.tagToken) {
-            console.log('found tag token');
             return this.tagCommandState;
         }
     }
@@ -77,13 +76,6 @@ class Parser {
         }
 
         while (this._currentState !== this.endCommandState) {
-            // if (!this._getNextValue()) {
-            //     this._currentState = this.endCommandState;
-            //     return;
-            // }
-            // if (this._isReservedToken(this._currentValue)) {
-            //     this._currentState = this._getCommandFromToken(this._currentValue);
-            // }
             this._currentState();
         }
 
@@ -103,7 +95,6 @@ class Parser {
     }
 
     tagCommandState() {
-        console.log('tag token');
         const token = this.tagToken;
         this._actionValues[token] = [];
         if (this._getNextValue()) {
