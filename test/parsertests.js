@@ -20,6 +20,23 @@ describe('Parser tests', function() {
         // runs after each test in this block
     });
 
+    it('parser should parse names', function() {
+        let input = ['bob', 'Timmy', 'stooge'];
+        let parser = new Parser(input);
+        parser.registerAction({
+            names: function(token, result) {
+                result.should.have.property(parser.nameToken);
+                let data = result['names'];
+                data.should.array;
+                data.should.length(3, 'array should have 3 objects');
+                data[0].should.be.exactly('bob');
+                data[1].should.be.exactly('timmy');
+                data[2].should.be.exactly('stooge');
+            }
+        });
+        parser.parse();
+    });
+
     it('parser should parse list', function() {
         let input = ['list'];
         let parser = new Parser(input);

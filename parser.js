@@ -35,6 +35,10 @@ class Parser {
         return 'tag';
     }
 
+    get nameToken() {
+        return 'names';
+    }
+
     _isReservedToken(token) {
         let reservedTokens = [
             this.tagToken,
@@ -48,9 +52,13 @@ class Parser {
         if (token === this.listToken) {
             return this.listCommandState;
         }
-        else if (token === this.tagToken) {
+
+        if (token === this.tagToken) {
             return this.tagCommandState;
         }
+
+        // name requires no token
+        return this.namesCommandState;
     }
 
     _raiseRegisteredAction(token) {
@@ -71,9 +79,8 @@ class Parser {
             return;
         }
 
-        if (this._isReservedToken(this._currentValue)) {
-            this._currentState = this._getCommandFromToken(this._currentValue);
-        }
+        this._currentState = this._getCommandFromToken(this._currentValue);
+        // if (this._isReservedToken(this._currentValue)) {
 
         while (this._currentState !== this.endCommandState) {
             this._currentState();
@@ -85,6 +92,25 @@ class Parser {
 
     endCommandState() {
         console.log('parsing ended');
+    }
+
+    namesCommandState() {
+        const token = this.nameToken;
+        this._actionValues[token] = this._actionValues[token] || [];
+        this._actionValues[token].push(this._currentValue.toLowerCase());
+
+        this._currentState = this._getNextValue() ?
+            this.namesCommandState : this.endCommandState;
+
+        if (this._currentState === this.endCommandState) {
+            this._raiseRegisteredAction(token);
+        }
+        // if (this._getNextValue()) {
+        //     this._currentState = this.namesCommandState;
+        // }
+        // else {
+        //     this._currentState = this.endCommandState;
+        // }
     }
 
     listCommandState() {
