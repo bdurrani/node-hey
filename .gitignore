@@ -1,7 +1,5 @@
+ # Created by https://www.gitignore.io/api/node 
 
-# Created by https://www.gitignore.io/api/node
-
-### Node ###
 # Logs
 logs
 *.log
@@ -64,4 +62,4 @@ typings/
 # user database
 data.db
 
-# End of https://www.gitignore.io/api/node
+# End of https://www.gitignore.io/api/node  
