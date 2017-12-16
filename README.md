@@ -1,3 +1,3 @@
-Node Hey
+# Node Hey
 
-The node version of (Hey)[https://interrupttracker.com/usage.html]
+The nodejs version of [Hey](https://interrupttracker.com/usage.html)
