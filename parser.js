@@ -80,7 +80,6 @@ class Parser {
         }
 
         this._currentState = this._getCommandFromToken(this._currentValue);
-        // if (this._isReservedToken(this._currentValue)) {
 
         while (this._currentState !== this.endCommandState) {
             this._currentState();
@@ -90,9 +89,7 @@ class Parser {
         this._currentState();
     }
 
-    endCommandState() {
-        console.log('parsing ended');
-    }
+    endCommandState() {}
 
     namesCommandState() {
         const token = this.nameToken;
@@ -105,12 +102,6 @@ class Parser {
         if (this._currentState === this.endCommandState) {
             this._raiseRegisteredAction(token);
         }
-        // if (this._getNextValue()) {
-        //     this._currentState = this.namesCommandState;
-        // }
-        // else {
-        //     this._currentState = this.endCommandState;
-        // }
     }
 
     listCommandState() {
@@ -125,8 +116,7 @@ class Parser {
         this._actionValues[token] = [];
         if (this._getNextValue()) {
             this._currentState = this.tagEventIdCommandState;
-        }
-        else {
+        } else {
             this._currentState = this.endCommandState;
         }
     }
@@ -138,8 +128,7 @@ class Parser {
         });
         if (this._getNextValue()) {
             this._currentState = this.tagValueCommandState;
-        }
-        else {
+        } else {
             this._raiseRegisteredAction(token);
             this._currentState = this.endCommandState;
         }
@@ -152,8 +141,7 @@ class Parser {
         });
         if (this._getNextValue()) {
             this._currentState = this.tagValueCommandState;
-        }
-        else {
+        } else {
             this._raiseRegisteredAction(token);
             this._currentState = this.endCommandState;
         }

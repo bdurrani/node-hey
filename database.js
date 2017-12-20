@@ -3,21 +3,25 @@ const fs = require('fs');
 const path = require('path');
 
 class Database {
-    constructor() {
-        this._db = this._init();
+    constructor(db) {
+        this._db = db;
     }
 
-    _init() {
+    static createHandle(dbPath) {
+        return new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE);
+    }
+
+    static setupDb() {
         const subFolder = 'default';
         const defaultDbName = 'default.db';
         const resultDbName = 'data.db';
         const destinationDbName = path.join('.', resultDbName);
         if (!fs.existsSync('./' + resultDbName)) {
             const sourceDbName = path.join('.', subFolder, defaultDbName);
-            this._copyFile(sourceDbName, destinationDbName);
+            Database._copyFile(sourceDbName, destinationDbName);
         }
 
-        return new sqlite3.Database(destinationDbName, sqlite3.OPEN_READWRITE);
+        return Database.createHandle(destinationDbName);
     }
 
     addInterruption(name) {
@@ -30,10 +34,10 @@ class Database {
         this._db.close();
     }
 
-    _copyFile(src, dest) {
+    static _copyFile(src, dest) {
         fs.writeFileSync(dest, fs.readFileSync(src));
     }
-    
+
     _getCurrentTime() {
         const currentTimeSeconds = Date.now();
         // const currentDate = new Date(currentTimeSeconds);

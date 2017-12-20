@@ -5,20 +5,11 @@
 var Database = require("./database");
 var Parser = require('./parser');
 
-var database = new Database();
+var dbConnection = Database.setupDb();
+var database = new Database(dbConnection);
 var args = process.argv.slice(2);
 var parser = new Parser(args);
 
-// for (let i = 0; i < args.length; i++) {
-//     let current = args[i];
-//     if (current === 'list') {
-
-//     }
-//     else {
-
-//     }
-// }
 
 // database.addInterruption('bilal');
 database.close();
-
