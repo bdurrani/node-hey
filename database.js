@@ -1,7 +1,20 @@
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
+const Sequelize = require('sequelize');
 
+class DatabaseOrm {
+    constructor(path) {
+        this._path = path;
+        this._sequelize = new Sequelize('data.db', '', '', {
+            dialect: 'sqlite',
+            // SQLite only
+            storage: this._path
+        });
+
+    }
+
+}
 class Database {
     constructor(db) {
         this._db = db;
