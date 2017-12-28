@@ -13,7 +13,7 @@ describe('database tests', function() {
 
     before(function() {
 
-        this.sequelize = new Sequelize('database', '', '', {
+        this.sequelize = new Sequelize('database', '', null, {
             dialect: 'sqlite',
             // default ':memory:'
             // storage: __dirname + '/data.db',
@@ -43,7 +43,7 @@ describe('database tests', function() {
         // runs after each test in this block
     });
 
-    it('parser should parse names', function() {
+    it('save user with tags', function(done) {
         const Interruption = this.sequelize.define('interruption', {
             who: {
                 type: Sequelize.STRING,
@@ -54,23 +54,39 @@ describe('database tests', function() {
                 defaultValue: Sequelize.NOW
             },
             tags: {
-                type: Sequelize.STRING
+                type: Sequelize.STRING,
+                get() {
+                    const rawTag = this.getDataValue('tags');
+                    return rawTag.split(";");
+                },
+                set(val) {
+                    const combined = val.join(";").toLowerCase();
+                    this.setDataValue('tags', combined);
+                }
             },
         });
 
+        let currentTime = new Date(2017, 12, 2, 12, 5, 5);
         Interruption.sync({ force: true })
             .then(() => {
                 // table created
                 return Interruption.create({
                     who: 'Bilal',
-                    tags: 'One;Two'
+                    tags: ['One', 'Two'],
+                    when: currentTime
                 });
+            })
+            .then(() => {
+                Interruption.findAll()
+                    .then(user => {
+                        user.should.have.length(1);
+                        const firstUser = user[0];
+                        firstUser.get('who').should.be.exactly("Bilal");
+                        console.log(firstUser.get('tags'));
+                        firstUser.get('when').getTime()
+                            .should.be.exactly(currentTime.getTime());
+                        done();
+                    });
             });
-
-        // Interruption.findAll().then(users => {
-        //     console.log('printing all users');
-        //     console.log(users);
-        // });
-
     });
 });
