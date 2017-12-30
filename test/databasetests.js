@@ -7,12 +7,7 @@ const Sequelize = require('sequelize');
 
 describe('database tests', function() {
 
-    const subFolder = 'default';
-    const defaultDbName = 'default.db';
-    const resultDbName = 'data.db';
-
     before(function() {
-
         this.sequelize = new Sequelize('database', '', null, {
             dialect: 'sqlite',
             // default ':memory:'
@@ -29,22 +24,7 @@ describe('database tests', function() {
                 console.error('Unable to connect to the database:', err);
             });
 
-    });
-
-    after(function() {
-        // runs after all tests in this block
-    });
-
-    beforeEach(function() {
-        // runs before each test in this block
-    });
-
-    afterEach(function() {
-        // runs after each test in this block
-    });
-
-    it('save user with tags', function(done) {
-        const Interruption = this.sequelize.define('interruption', {
+        this.Interruption = this.sequelize.define('interruption', {
             who: {
                 type: Sequelize.STRING,
                 allowNull: false
@@ -64,29 +44,64 @@ describe('database tests', function() {
                     this.setDataValue('tags', combined);
                 }
             },
+            comment: {
+                type: Sequelize.STRING
+            }
         });
+    });
 
+    after(function() {
+        // runs after all tests in this block
+    });
+
+    beforeEach(function() {
+        // runs before each test in this block
+    });
+
+    afterEach(function() {
+        // runs after each test in this block
+    });
+
+    // nextEventId() {
+    //     return this.Interruption.max("eventId");
+    // }
+
+    it('save user with tags', function(done) {
         let currentTime = new Date(2017, 12, 2, 12, 5, 5);
-        Interruption.sync({ force: true })
+        this.Interruption
+            .sync({ force: true })
+            // .then(() => {
+            //     return this.Interruption.max("eventId");
+            // })
+            // .then(id => {
+            //     console.log("event id" + id);
+            //     return Sequelize.Promise.resolve();
+            // })
+            // this.Interruption
             .then(() => {
                 // table created
-                return Interruption.create({
+                return this.Interruption.create({
                     who: 'Bilal',
                     tags: ['One', 'Two'],
-                    when: currentTime
+                    when: currentTime,
+                    eventId: 1
                 });
             })
             .then(() => {
-                Interruption.findAll()
-                    .then(user => {
-                        user.should.have.length(1);
-                        const firstUser = user[0];
-                        firstUser.get('who').should.be.exactly("Bilal");
-                        console.log(firstUser.get('tags'));
-                        firstUser.get('when').getTime()
-                            .should.be.exactly(currentTime.getTime());
-                        done();
-                    });
+                return this.Interruption.findAll();
+            })
+            .then(user => {
+                user.should.have.length(1);
+                const firstUser = user[0];
+                const id = firstUser.get('id');
+                id.should.be.exactly(1);
+                firstUser.get('who').should.be.exactly("Bilal");
+                let tags = firstUser.get('tags');
+                tags.should.be.an.Array();
+                tags.should.containDeepOrdered(['one', 'two']);
+                firstUser.get('when').getTime()
+                    .should.be.exactly(currentTime.getTime());
+                done();
             });
     });
 });

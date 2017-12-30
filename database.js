@@ -15,54 +15,81 @@ class DatabaseOrm {
     }
 
 }
+
 class Database {
-    constructor(db) {
-        this._db = db;
+    constructor() {
+        this._sequelize = new Sequelize('database', '', null, {
+            dialect: 'sqlite',
+            // default ':memory:'
+            storage: path.join(__dirname, 'data.db'),
+            operatorsAliases: false
+        });
+
+        const delimiter = ";";
+        this._Interruption = this._sequelize.define('interruption', {
+            who: {
+                type: Sequelize.STRING,
+                allowNull: false,
+                set(val) {
+                    const combined = val.join(delimiter).toLowerCase();
+                    this.setDataValue('who', combined);
+                },
+                get() {
+                    const rawTag = this.getDataValue('who');
+                    return rawTag.split(delimiter);
+                },
+            },
+            when: {
+                type: Sequelize.DATE,
+                defaultValue: Sequelize.NOW
+            },
+            tags: {
+                type: Sequelize.STRING,
+                get() {
+                    const rawTag = this.getDataValue('tags');
+                    return rawTag.split(delimiter);
+                },
+                set(val) {
+                    const combined = val.join(delimiter).toLowerCase();
+                    this.setDataValue('tags', combined);
+                }
+            },
+            comment: {
+                type: Sequelize.STRING
+            }
+        });
+        this._Interruption.sync();
     }
 
-    static createHandle(dbPath) {
-        return new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE);
-    }
-
-    static setupDb() {
-        const subFolder = 'default';
-        const defaultDbName = 'default.db';
-        const resultDbName = 'data.db';
-        const destinationDbName = path.join('.', resultDbName);
-        if (!fs.existsSync('./' + resultDbName)) {
-            const sourceDbName = path.join('.', subFolder, defaultDbName);
-            Database._copyFile(sourceDbName, destinationDbName);
+    addInterruption(name, tags) {
+        let useObj = { who: name };
+        if (tags) {
+            useObj = Object.assign(useObj, { tags: tags })
         }
 
-        return Database.createHandle(destinationDbName);
+        let interruption = this._Interruption.create(useObj);
+        interruption.save();
     }
 
-    addInterruption(name) {
-        const currentTimeSeconds = Date.now();
-        const insert = `INSERT INTO interruptions ( who, [when], tags ) VALUES (? ,?, ?)`;
-        this._db.run(insert, [name, currentTimeSeconds, '']);
+    addComments(eventId, comment) {
+
+    }
+
+    addTag(eventId, tags) {
+
+    }
+
+    retag(eventId, tags) {
+
+    }
+
+    listInterruptions {
+
     }
 
     close() {
-        this._db.close();
-    }
-
-    static _copyFile(src, dest) {
-        fs.writeFileSync(dest, fs.readFileSync(src));
-    }
-
-    _getCurrentTime() {
-        const currentTimeSeconds = Date.now();
-        // const currentDate = new Date(currentTimeSeconds);
+        this._sequelize.close();
     }
 }
 
 module.exports = Database;
-
-// CREATE TABLE interruptions (
-//     id     INT      PRIMARY KEY
-// NOT NULL,
-//     who    STRING,
-//     [when] DATETIME,
-//     tags   STRING
-// );
