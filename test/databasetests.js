@@ -1,12 +1,13 @@
 var assert = require('assert');
 var should = require('should');
-var Database = require('../database');
+var { Database, DatabaseUtils } = require('../database');
 
 describe('database library tests', function() {
 
     before(function(done) {
         this._database = new Database(true);
-        this._database.init()
+        this._database
+            .init()
             .then(() => {
                 done();
             });
@@ -17,25 +18,49 @@ describe('database library tests', function() {
     });
 
     beforeEach(function(done) {
-        this._database.clearAll()
+        this._database
+            .clearAll()
             .then(() => {
                 done();
             });
     });
 
     afterEach(function() {
-        // runs after each test in this block
+
     });
+
+    it('list interruptions for the day', function(done) {
+        const firstUser = "bilal";
+        const secondUser = "tim";
+        let interruptions = [];
+        interruptions.push(this._database.addInterruption([firstUser]));
+        interruptions.push(this._database.addInterruption([secondUser]));
+        DatabaseUtils.all(interruptions)
+            .then(() => {
+                return this._database.listInterruptions();
+            })
+            .then((interruptions) => {
+                return DatabaseUtils.dumpData(this._database);
+            })
+            .then(results => {
+                results.should.have.length(2);
+                const first = results[0];
+                first.who.should.containDeepOrdered([firstUser]);
+                should(first.tags).be.null();
+                should(first.comment).be.null();
+                done();
+            });
+    });
+
 
     it('save interruption', function(done) {
         const username = "bilal";
-        this._database.addInterruption([username])
+        this._database
+            .addInterruption([username])
             .then(() => {
-                return this._database.dumpData();
+                return DatabaseUtils.dumpData(this._database);
             })
             .then(result => {
-                console.log(result);
-
                 result.should.have.length(1);
                 const firstItem = result[0];
                 firstItem.id.should.be.exactly(1);
@@ -56,100 +81,3 @@ describe('database library tests', function() {
     });
 
 });
-
-// describe('database tests', function() {
-
-//     before(function() {
-//         this.sequelize = new Sequelize('database', '', null, {
-//             dialect: 'sqlite',
-//             // default ':memory:'
-//             // storage: __dirname + '/data.db',
-//             operatorsAliases: false
-//         });
-
-//         this.sequelize
-//             .authenticate()
-//             .then(() => {
-//                 console.log('Connection has been established successfully.');
-//             })
-//             .catch(err => {
-//                 console.error('Unable to connect to the database:', err);
-//             });
-
-//         this.Interruption = this.sequelize.define('interruption', {
-//             who: {
-//                 type: Sequelize.STRING,
-//                 allowNull: false
-//             },
-//             when: {
-//                 type: Sequelize.DATE,
-//                 defaultValue: Sequelize.NOW
-//             },
-//             tags: {
-//                 type: Sequelize.STRING,
-//                 get() {
-//                     const rawTag = this.getDataValue('tags');
-//                     return rawTag.split(";");
-//                 },
-//                 set(val) {
-//                     const combined = val.join(";").toLowerCase();
-//                     this.setDataValue('tags', combined);
-//                 }
-//             },
-//             comment: {
-//                 type: Sequelize.STRING
-//             }
-//         });
-//     });
-
-//     after(function() {
-//         // runs after all tests in this block
-//     });
-
-//     beforeEach(function() {
-//         // runs before each test in this block
-//     });
-
-//     afterEach(function() {
-//         // runs after each test in this block
-//     });
-
-//     it('save user with tags', function(done) {
-//         let currentTime = new Date(2017, 12, 2, 12, 5, 5);
-//         this.Interruption
-//             .sync({ force: true })
-//             // .then(() => {
-//             //     return this.Interruption.max("eventId");
-//             // })
-//             // .then(id => {
-//             //     console.log("event id" + id);
-//             //     return Sequelize.Promise.resolve();
-//             // })
-//             // this.Interruption
-//             .then(() => {
-//                 // table created
-//                 return this.Interruption.create({
-//                     who: 'Bilal',
-//                     tags: ['One', 'Two'],
-//                     when: currentTime,
-//                     eventId: 1
-//                 });
-//             })
-//             .then(() => {
-//                 return this.Interruption.findAll();
-//             })
-//             .then(user => {
-//                 user.should.have.length(1);
-//                 const firstUser = user[0];
-//                 const id = firstUser.get('id');
-//                 id.should.be.exactly(1);
-//                 firstUser.get('who').should.be.exactly("Bilal");
-//                 let tags = firstUser.get('tags');
-//                 tags.should.be.an.Array();
-//                 tags.should.containDeepOrdered(['one', 'two']);
-//                 firstUser.get('when').getTime()
-//                     .should.be.exactly(currentTime.getTime());
-//                 done();
-//             });
-//     });
-// });

@@ -97,24 +97,16 @@ class Database {
 
         // when < [timestamp] AND when > [timestamp]
         return this._Interruption.findAll({
-            where: {
-                when: {
-                    [Op.lt]: morning,
-                    [Op.gt]: midnight
+                where: {
+                    when: {
+                        [Op.lt]: morning,
+                        [Op.gt]: midnight
+                    }
                 }
-            }
-        });
-    }
-
-    dumpData() {
-        return this._Interruption
-            .findAll({
-                attributes: ['id', 'who', 'when', 'tags', 'comment']
             })
-            .then(results => {
-                const plainResults = results.map(x => x.get({ plain: true }));
-                return Sequelize.Promise.resolve(plainResults);
-            })
+            .then((results) => {
+                return this._convertToPlainObjects(results);
+            });
     }
 
     clearAll() {
@@ -126,4 +118,29 @@ class Database {
     }
 }
 
-module.exports = Database;
+class DatabaseUtils {
+    static all(promises) {
+        return Sequelize.Promise.all(promises);
+    }
+
+    static dumpData(database) {
+        return database
+            ._Interruption
+            .findAll({
+                attributes: ['id', 'who', 'when', 'tags', 'comment']
+            })
+            .then(results => {
+                return DatabaseUtils.convertToPlainObjects(results);
+            });
+    }
+
+    static convertToPlainObjects(results) {
+        const plainResults = results.map(x => x.get({ plain: true }));
+        return Sequelize.Promise.resolve(plainResults);
+    }
+}
+
+module.exports = {
+    Database,
+    DatabaseUtils
+}
