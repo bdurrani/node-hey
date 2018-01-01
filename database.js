@@ -1,55 +1,147 @@
-const sqlite3 = require('sqlite3').verbose();
-const fs = require('fs');
 const path = require('path');
+const Sequelize = require('sequelize');
 
 class Database {
-    constructor(db) {
-        this._db = db;
+    constructor(forTesting) {
+        this._sequelize = new Sequelize('database', '', null, {
+            dialect: 'sqlite',
+            storage: forTesting ? ":memory:" : path.join(__dirname, 'data.db'),
+            operatorsAliases: false
+        });
+
+        const delimiter = ";";
+        this._Interruption = this._sequelize.define('interruption', {
+            who: {
+                type: Sequelize.STRING,
+                allowNull: false,
+                set(val) {
+                    let result;
+                    if (val) {
+                        result = val.join(delimiter).toLowerCase();
+                    } else {
+                        result = null;
+                    }
+
+                    this.setDataValue('who', result);
+                },
+                get() {
+                    const rawTag = this.getDataValue('who');
+                    return rawTag.split(delimiter);
+                },
+            },
+            when: {
+                type: Sequelize.DATE,
+                defaultValue: Sequelize.NOW
+            },
+            tags: {
+                type: Sequelize.STRING,
+                get() {
+                    const rawTag = this.getDataValue('tags');
+                    if (rawTag) {
+                        return rawTag.split(delimiter);
+                    } else {
+                        return rawTag;
+                    }
+                },
+                set(val) {
+                    let result;
+                    if (val) {
+                        result = val.join(delimiter).toLowerCase();
+                    } else {
+                        result = null;
+                    }
+                    this.setDataValue('tags', result);
+                }
+            },
+            comment: {
+                type: Sequelize.STRING
+            }
+        });
     }
 
-    static createHandle(dbPath) {
-        return new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE);
+    init() {
+        return this._Interruption.sync();
     }
 
-    static setupDb() {
-        const subFolder = 'default';
-        const defaultDbName = 'default.db';
-        const resultDbName = 'data.db';
-        const destinationDbName = path.join('.', resultDbName);
-        if (!fs.existsSync('./' + resultDbName)) {
-            const sourceDbName = path.join('.', subFolder, defaultDbName);
-            Database._copyFile(sourceDbName, destinationDbName);
+    addInterruption(name, tags) {
+        let useObj = { who: name };
+        if (tags) {
+            useObj = Object.assign(useObj, { tags: tags });
         }
 
-        return Database.createHandle(destinationDbName);
+        return this._Interruption.create(useObj)
+            .then(interruption => {
+                return interruption.save();
+            });
     }
 
-    addInterruption(name) {
-        const currentTimeSeconds = Date.now();
-        const insert = `INSERT INTO interruptions ( who, [when], tags ) VALUES (? ,?, ?)`;
-        this._db.run(insert, [name, currentTimeSeconds, '']);
+    addComments(eventId, comment) {
+
+    }
+
+    addTag(eventId, tags) {
+
+    }
+
+    retag(eventId, tags) {
+
+    }
+
+    listInterruptions() {
+        const Op = Sequelize.Op;
+        const morning = new Date();
+        morning.setHours(0, 0, 0, 0);
+
+        const midnight = new Date();
+        midnight.setHours(23, 59, 59);
+
+        // when < [timestamp] AND when > [timestamp]
+        return this._Interruption.findAll({
+                where: {
+                    when: {
+                        [Op.lt]: midnight,
+                        [Op.gt]: morning
+                    }
+                }
+            })
+            .then((results) => {
+                return Database._convertToPlainObjects(results);
+            });
+    }
+
+    static _convertToPlainObjects(results) {
+        const plainResults = results.map(x => x.get({ plain: true }));
+        return Sequelize.Promise.resolve(plainResults);
+    }
+
+    clearAll() {
+        return this._sequelize.sync({ force: true });
     }
 
     close() {
-        this._db.close();
-    }
-
-    static _copyFile(src, dest) {
-        fs.writeFileSync(dest, fs.readFileSync(src));
-    }
-
-    _getCurrentTime() {
-        const currentTimeSeconds = Date.now();
-        // const currentDate = new Date(currentTimeSeconds);
+        this._sequelize.close();
     }
 }
 
-module.exports = Database;
+class DatabaseUtils {
+    static all(promises) {
+        return Sequelize.Promise.all(promises);
+    }
 
-// CREATE TABLE interruptions (
-//     id     INT      PRIMARY KEY
-// NOT NULL,
-//     who    STRING,
-//     [when] DATETIME,
-//     tags   STRING
-// );
+    static dumpData(database) {
+        return database
+            ._Interruption
+            .findAll({
+                attributes: ['id', 'who', 'when', 'tags', 'comment']
+            })
+            .then(results => {
+                return Database._convertToPlainObjects(results);
+            });
+    }
+
+}
+
+module.exports = {
+    Database,
+    DatabaseUtils
+}
