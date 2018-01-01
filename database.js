@@ -99,14 +99,19 @@ class Database {
         return this._Interruption.findAll({
                 where: {
                     when: {
-                        [Op.lt]: morning,
-                        [Op.gt]: midnight
+                        [Op.lt]: midnight,
+                        [Op.gt]: morning
                     }
                 }
             })
             .then((results) => {
-                return this._convertToPlainObjects(results);
+                return Database._convertToPlainObjects(results);
             });
+    }
+
+    static _convertToPlainObjects(results) {
+        const plainResults = results.map(x => x.get({ plain: true }));
+        return Sequelize.Promise.resolve(plainResults);
     }
 
     clearAll() {
@@ -130,14 +135,10 @@ class DatabaseUtils {
                 attributes: ['id', 'who', 'when', 'tags', 'comment']
             })
             .then(results => {
-                return DatabaseUtils.convertToPlainObjects(results);
+                return Database._convertToPlainObjects(results);
             });
     }
 
-    static convertToPlainObjects(results) {
-        const plainResults = results.map(x => x.get({ plain: true }));
-        return Sequelize.Promise.resolve(plainResults);
-    }
 }
 
 module.exports = {

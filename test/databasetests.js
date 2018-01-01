@@ -37,21 +37,19 @@ describe('database library tests', function() {
         interruptions.push(this._database.addInterruption([secondUser]));
         DatabaseUtils.all(interruptions)
             .then(() => {
-                return this._database.listInterruptions();
-            })
-            .then((interruptions) => {
-                return DatabaseUtils.dumpData(this._database);
+                interruptions = [];
+                interruptions.push(this._database.listInterruptions());
+                interruptions.push(DatabaseUtils.dumpData(this._database));
+                return DatabaseUtils.all(interruptions);
             })
             .then(results => {
-                results.should.have.length(2);
-                const first = results[0];
-                first.who.should.containDeepOrdered([firstUser]);
-                should(first.tags).be.null();
-                should(first.comment).be.null();
+                let todaysInterruptions = results[0];
+                let dbDump = results[1];
+                todaysInterruptions.should.have.length(2);
+                dbDump.should.have.length(2);
                 done();
             });
     });
-
 
     it('save interruption', function(done) {
         const username = "bilal";
@@ -62,13 +60,8 @@ describe('database library tests', function() {
             })
             .then(result => {
                 result.should.have.length(1);
-                const firstItem = result[0];
-                firstItem.id.should.be.exactly(1);
-                const who = firstItem.who;
-                who.should.be.an.Array();
-                who.should.containDeepOrdered([username]);
-                should(firstItem.tags).be.null();
-                should(firstItem.comment).be.null();
+                validateSingleUserWithoutCommandsOrTags(result[0], username, 1);
+
                 //                 id.should.be.exactly(1);
                 //                 firstUser.get('who').should.be.exactly("Bilal");
                 //                 let tags = firstUser.get('tags');
@@ -79,5 +72,13 @@ describe('database library tests', function() {
                 done();
             })
     });
+
+    function validateSingleUserWithoutCommandsOrTags(entry, username, id) {
+        entry.id.should.be.exactly(id);
+        entry.who.should.be.an.Array();
+        entry.who.should.containDeepOrdered([username]);
+        should(entry.tags).be.null();
+        should(entry.comment).be.null();
+    }
 
 });
