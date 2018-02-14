@@ -2,12 +2,12 @@
 
 //console.log('hello console')
 // var index = require("./index");
-var Database = require("./database");
-var Parser = require('./parser');
+const Database = require('./database');
+const Parser = require('./parser');
 
-var dbConnection = Database.setupDb();
-var database = new Database(dbConnection);
-var args = process.argv.slice(2);
+const dbConnection = Database.setupDb();
+const database = new Database(dbConnection);
+const args = process.argv.slice(2);
 // var parser = new Parser(args);
 
 // database.addInterruption('bilal');
