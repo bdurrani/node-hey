@@ -42,14 +42,6 @@ describe('database library tests', () => {
 		const result = await DatabaseUtils.dumpData(_database);
 		result.should.have.length(1);
 		validateSingleUserWithoutCommandsOrTags(result[0], username, 1);
-
-		//                 id.should.be.exactly(1);
-		//                 firstUser.get('who').should.be.exactly("Bilal");
-		//                 let tags = firstUser.get('tags');
-		//                 tags.should.be.an.Array();
-		//                 tags.should.containDeepOrdered(['one', 'two']);
-		//                 firstUser.get('when').getTime()
-		//                     .should.be.exactly(currentTime.getTime());
 	});
 
 	function validateSingleUserWithoutCommandsOrTags(entry, username, id) {
